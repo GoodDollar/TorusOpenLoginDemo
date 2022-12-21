@@ -1,31 +1,16 @@
 import React from "react";
-import ReactDOM from "react-dom";
-import App from "./App";
-import { NativeBaseProvider, extendTheme } from "native-base";
+import { createRoot } from 'react-dom/client';
 import reportWebVitals from "./reportWebVitals";
-import { OpenLoginProvider } from "./openlogin";
+import './shim';
 
-const theme = extendTheme({
-  config: {
-    initialColorMode: "dark",
-  },
-});
+import AppRoot from "./AppRoot";
 
-// extend the theme
-type MyThemeType = typeof theme;
-declare module "native-base" {
-  interface ICustomTheme extends MyThemeType {}
-}
-
-ReactDOM.render(
+createRoot(
+  document.getElementById("root")!
+).render(
   <React.StrictMode>
-    <NativeBaseProvider theme={theme}>
-      <OpenLoginProvider clientId="BAS1hxL_eicnbgmw4AVY3V2VL98fLivRouaOszzA_sDs6GV-MyGk_Sv-qHUPNSK801UMKsyU1t1xmcCneWx0-VQ">
-        <App />
-      </OpenLoginProvider>
-    </NativeBaseProvider>
-  </React.StrictMode>,
-  document.getElementById("root")
+    <AppRoot />
+  </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

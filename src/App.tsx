@@ -1,6 +1,4 @@
-import logo from "./logo.svg";
 import {
-  Image,
   Text,
   Link,
   HStack,
@@ -22,12 +20,6 @@ function App() {
       px={4}
     >
       <VStack space={5} alignItems="center">
-        <Image
-          source={{ uri: logo }}
-          resizeMode="contain"
-          size={220}
-          alt="NativeBase logo"
-        />
         <Heading size="lg">Welcome to NativeBase</Heading>
         <Text>
           Edit{" "}
