@@ -12,4 +12,10 @@ export interface IOpenLoginSDK {
   login(): Promise<void>;
   getUserInfo(): Promise<Partial<UserInfo>>;
   logout(): Promise<void>;
+  getChainId(): Promise<any>;
+  getAccounts(): Promise<any>;
+  getBalance(): Promise<string>;
+  sendTransaction(destination: string, amount: number): Promise<any>;
+  signMessage(originalMessage: string): Promise<any>;
+  getPrivateKey(): Promise<any>;
 }

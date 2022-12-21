@@ -22,6 +22,15 @@ export interface IOpenLoginHook {
   logout: SDK["logout"];
 };
 
+export type IEthersRPCHook = Pick<IOpenLoginSDK, 
+  "getAccounts" | 
+  "getBalance" | 
+  "getChainId" | 
+  "getPrivateKey" | 
+  "sendTransaction" | 
+  "signMessage"
+>;
+
 export const OpenLoginContext = createContext<IOpenLoginContext>({
   userInfo: null,
   sdk: undefined,
@@ -74,4 +83,29 @@ export const useOpenLogin = (): IOpenLoginHook => {
   const { isLoggedIn } = sdk!;
 
   return { isLoggedIn, userInfo, login, logout };
+}
+
+export const useEthersRPC = (): IEthersRPCHook => {
+  const { sdk } = useContext(OpenLoginContext);
+  const getChainId = useCallback(async () => sdk!.getChainId(), [sdk]);
+  const getAccounts = useCallback(async () => sdk!.getAccounts(), [sdk]);
+  const getBalance = useCallback(async () => sdk!.getBalance(), [sdk]);
+  const getPrivateKey = useCallback(async () => sdk!.getPrivateKey(), [sdk]);
+  
+  const signMessage = useCallback(async (originalMessage: string) => {
+    return sdk!.signMessage(originalMessage);
+  }, [sdk]);
+
+  const sendTransaction = useCallback(async (destination: string, amount: number) => {
+    return sdk!.sendTransaction(destination, amount);
+  }, [sdk]);
+
+  return {
+    getChainId,
+    getAccounts,
+    getBalance,
+    getPrivateKey,
+    signMessage,
+    sendTransaction,
+  };
 }
