@@ -7,10 +7,13 @@ import {
   useColorMode,
   VStack,
   Box,
+  Button,
 } from "native-base";
+import { useOpenLogin } from "./openlogin";
 
 function App() {
   const { colorMode } = useColorMode();
+  const { userInfo, login, logout } = useOpenLogin();
 
   return (
     <Box
@@ -21,27 +24,28 @@ function App() {
     >
       <VStack space={5} alignItems="center">
         <Heading size="lg">Welcome to NativeBase</Heading>
-        <Text>
-          Edit{" "}
-          <Box
-            _text={{
-              fontFamily: "monospace",
-              fontSize: "sm",
-            }}
-            px={2}
-            py={1}
-            _dark={{ bg: "blueGray.800" }}
-            _light={{ bg: "blueGray.200" }}
-          >
-            src/pages/index.js
-          </Box>{" "}
-          and save to reload.
-        </Text>
-        <Link href="https://docs.nativebase.io" isExternal>
-          <Text color="primary.500" underline fontSize={"xl"}>
-            Learn NativeBase
+        {userInfo && (
+          <Text>
+            Welcome, {userInfo.name}{' '}
+            <Box
+              _text={{
+                fontFamily: "monospace",
+                fontSize: "sm",
+              }}
+              px={2}
+              py={1}
+              _dark={{ bg: "blueGray.800" }}
+              _light={{ bg: "blueGray.200" }}
+            >
+              {userInfo.email}
+            </Box>
           </Text>
-        </Link>
+        )}
+        {userInfo ? (
+          <Button onPress={logout}>Sign out</Button>
+          ) : (
+          <Button onPress={login}>Sign In</Button>
+        )}
         <ToggleDarkMode />
       </VStack>
     </Box>
