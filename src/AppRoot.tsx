@@ -17,7 +17,13 @@ declare module "native-base" {
 
 const AppRoot = () => (
   <NativeBaseProvider theme={theme}>
-    <OpenLoginProvider clientId="BAS1hxL_eicnbgmw4AVY3V2VL98fLivRouaOszzA_sDs6GV-MyGk_Sv-qHUPNSK801UMKsyU1t1xmcCneWx0-VQ">
+    <OpenLoginProvider 
+      clientId="BAS1hxL_eicnbgmw4AVY3V2VL98fLivRouaOszzA_sDs6GV-MyGk_Sv-qHUPNSK801UMKsyU1t1xmcCneWx0-VQ"
+      googleClientId="116029009779-p67pragfd05ljt66nqq2rvnsune8g4j8.apps.googleusercontent.com"
+      verifier="gooddollar-google-testnet"
+      appName="GoodSwap"
+      appLogo="https://goodswap.xyz/static/media/logo.1fb143e9.png"
+    >
       <App />
     </OpenLoginProvider>
   </NativeBaseProvider>

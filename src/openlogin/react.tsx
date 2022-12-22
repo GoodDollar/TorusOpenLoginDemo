@@ -1,46 +1,45 @@
 import { UserInfo } from "@web3auth/base";
-import { createContext, ReactElement, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useColorMode, useColorModeValue } from "native-base";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
+import { IOpenLoginOptions, IOpenLoginSDK, IOpenLoginContext, IOpenLoginProviderProps, IOpenLoginHook, IEthersRPCHook } from "./types";
 import SDK from "./sdk";
-import { IOpenLoginOptions, IOpenLoginSDK } from "./types";
-
-export interface IOpenLoginProviderProps {
-  clientId: string;
-  children?: ReactElement;
-}
-
-export interface IOpenLoginContext {
-  userInfo: Partial<UserInfo> | null;
-  sdk: IOpenLoginSDK | undefined;
-}
-
-// user, login, logout
-export interface IOpenLoginHook {
-  isLoggedIn: boolean;
-  userInfo: Partial<UserInfo> | null;
-  login: SDK["login"];
-  logout: SDK["logout"];
-};
-
-export type IEthersRPCHook = Pick<IOpenLoginSDK, 
-  "getAccounts" | 
-  "getBalance" | 
-  "getChainId" | 
-  "getPrivateKey" | 
-  "sendTransaction" | 
-  "signMessage"
->;
 
 export const OpenLoginContext = createContext<IOpenLoginContext>({
   userInfo: null,
   sdk: undefined,
 })
 
-export const OpenLoginProvider = ({ clientId, children }: IOpenLoginProviderProps) => {
+export const OpenLoginProvider = ({ 
+  // login opts
+  clientId, 
+  googleClientId, 
+  verifier, 
+  network = "testnet", 
+  // app opts
+  appName,
+  appLogo,
+  locale = "en",    
+  // generic react props
+  children 
+}: IOpenLoginProviderProps) => {
+  const { colorMode } = useColorMode();
+  const primaryColor = useColorModeValue("primary.50", "primary.800");
   const [userInfo, setUserInfo] = useState<Partial<UserInfo> | null>(null);
   const [sdk, setSDK] = useState<IOpenLoginSDK>();
+  
   // TODO: usePropsRefs
-  const optionsRef = useRef<IOpenLoginOptions>({ clientId })
+  const optionsRef = useRef<IOpenLoginOptions>({ 
+    clientId, 
+    network, 
+    googleClientId, 
+    verifier,
+    appName,
+    appLogo,
+    locale,
+    primaryColor,
+    darkMode: colorMode === "dark",
+  })
   
   useEffect(() => {    
     const sdk = new SDK();

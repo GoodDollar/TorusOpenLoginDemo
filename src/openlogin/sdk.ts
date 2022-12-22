@@ -1,11 +1,11 @@
 import { ethers } from "ethers";
-import { Web3Auth } from "@web3auth/modal";
-import { UserInfo, CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
+import { Web3AuthCore } from "@web3auth/core";
+import { OpenloginAdapter } from "@web3auth/openlogin-adapter";
+import { UserInfo, CHAIN_NAMESPACES, ADAPTER_STATUS, WALLET_ADAPTERS, SafeEventEmitterProvider } from "@web3auth/base";
 import { IOpenLoginOptions, IOpenLoginSDK } from "./types";
 
 class OpenLoginWebSDK implements IOpenLoginSDK {
-  private auth!: Web3Auth;
-  private provider!: SafeEventEmitterProvider | null;
+  private auth!: Web3AuthCore;  
   private eth!: ethers.providers.Web3Provider | null;
   private listener!: IOpenLoginOptions["onLoginStateChanged"] | null;
 
@@ -14,33 +14,73 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
   }
 
   get isLoggedIn(): boolean {
-    return !!this.provider;
+    return this.auth.status === ADAPTER_STATUS.CONNECTED && !!this.provider;
   }
 
-  async initialize({ clientId, onLoginStateChanged }: IOpenLoginOptions): Promise<void> {
+  private get provider(): SafeEventEmitterProvider | null {
+    return this.auth.provider;
+  }
+
+  async initialize({ 
+    // login opts
+    clientId, 
+    googleClientId, 
+    verifier, 
+    network = 'testnet',     
+    // app opts
+    appName,
+    appLogo,
+    locale = "en",    
+    // theme opts
+    primaryColor,  
+    darkMode = false,  
+    // feedback opts
+    onLoginStateChanged 
+  }: IOpenLoginOptions): Promise<void> {
     if (this.initialized) {
       return;
     }
 
-    const auth = new Web3Auth({
+    const auth = new Web3AuthCore({      
       clientId,
+      web3AuthNetwork: network,
       chainConfig: {
         chainNamespace: CHAIN_NAMESPACES.EIP155,
         chainId: "0xa4ec",
         rpcTarget: "https://rpc.ankr.com/celo", // This is the public RPC we have added, please pass on your own endpoint while creating an app
       },
     });   
+    
+    auth.configureAdapter(new OpenloginAdapter({
+      adapterSettings: {
+        uxMode: "popup",
+        loginConfig: {
+          jwt: {
+            verifier,
+            typeOfLogin: "jwt",
+            clientId: googleClientId,
+          },
+        },
+        whiteLabel: {
+          name: appName,
+          dark: darkMode,
+          defaultLanguage: locale,
+          [darkMode ? "logoDark" : "logoLight"]: appLogo,
+          theme: !primaryColor ? undefined : {
+            primary: primaryColor,
+          }
+        },        
+      },
+    }));
 
-    await auth.initModal();
+    await auth.init();
     this.auth = auth;
     
     if (onLoginStateChanged) {
       this.listener = onLoginStateChanged;
     }
 
-    const { provider } = auth
-
-    this.setProvider(provider || null);
+    this.onLoginStateChanged();
   }
 
   async login(): Promise<void> {
@@ -50,9 +90,11 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
       return;
     }
     
-    const provider = await this.auth.connect();
+    await this.auth.connectTo(WALLET_ADAPTERS.OPENLOGIN, {
+      loginProvider: "google",
+    });
     
-    this.setProvider(provider);
+    this.onLoginStateChanged();
   }
 
   async getUserInfo(): Promise<Partial<UserInfo>> {    
@@ -69,7 +111,7 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
     }
 
     await this.auth.logout();
-    this.setProvider(null);
+    this.onLoginStateChanged();
   }
 
   async getChainId(): Promise<any> {
@@ -138,19 +180,18 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
     })
   }
 
-  private setProvider(provider: SafeEventEmitterProvider | null) {
-    const { listener } = this;
+  private onLoginStateChanged() {
+    const { listener, isLoggedIn, provider } = this;
     let eth: ethers.providers.Web3Provider | null = null;
     
-    if (provider) {
-      eth = new ethers.providers.Web3Provider(provider);    
+    if (isLoggedIn) {
+      eth = new ethers.providers.Web3Provider(provider!);    
     }
-    
-    this.provider = provider;
-    this.eth = eth;
 
+    this.eth = eth;
+    
     if (listener) {
-      listener(!!provider);
+      listener(isLoggedIn);
     }
   }
 

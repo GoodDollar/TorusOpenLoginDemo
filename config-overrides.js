@@ -1,14 +1,27 @@
 const webpack = require("webpack");
 
 module.exports = function override(config) {
-  const { resolve, plugins = [] } = config
+  const { resolve, module, plugins = [] } = config
   const { fallback = {} } = resolve;
+  const { rules = [] } = module;
 
   return {
     ...config,
     ignoreWarnings: [
       /Failed to parse source map/
     ],
+    module: {
+      ...module,
+      rules: [
+        ...rules,
+        {
+          test: /\.m?js/,
+          resolve: {
+            fullySpecified: false
+          }
+        }
+      ]
+    },
     resolve: {
       ...resolve,
       fallback: {
