@@ -1,6 +1,5 @@
 import {
   Text,
-  Link,
   HStack,
   Heading,
   Switch,

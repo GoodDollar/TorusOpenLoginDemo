@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import { Web3AuthCore } from "@web3auth/core";
 import { OpenloginAdapter } from "@web3auth/openlogin-adapter";
+import { TorusWalletConnectorPlugin } from "@web3auth/torus-wallet-connector-plugin";
 import { UserInfo, CHAIN_NAMESPACES, ADAPTER_STATUS, WALLET_ADAPTERS, SafeEventEmitterProvider } from "@web3auth/base";
 import { IOpenLoginOptions, IOpenLoginSDK } from "./types";
 
@@ -50,6 +51,15 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
         rpcTarget: "https://rpc.ankr.com/celo", // This is the public RPC we have added, please pass on your own endpoint while creating an app
       },
     });   
+
+    const colors = {
+      primary: primaryColor || "#00a8ff",
+    }
+
+    const logo = {
+      logoDark: appLogo || "https://web3auth.io/images/w3a-L-Favicon-1.svg",
+      logoLight: appLogo || "https://web3auth.io/images/w3a-D-Favicon-1.svg",
+    }
     
     auth.configureAdapter(new OpenloginAdapter({
       adapterSettings: {
@@ -64,12 +74,20 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
         whiteLabel: {
           name: appName,
           dark: darkMode,
-          defaultLanguage: locale,
-          [darkMode ? "logoDark" : "logoLight"]: appLogo,
-          theme: !primaryColor ? undefined : {
-            primary: primaryColor,
-          }
+          defaultLanguage: locale,          
+          theme: colors,
+          ...logo,
         },        
+      },
+    }));
+
+    await auth.addPlugin(new TorusWalletConnectorPlugin({
+      torusWalletOpts: {},
+      walletInitOptions: {
+        whiteLabel: {
+          theme: { isDark: darkMode, colors },
+          ...logo,
+        },                
       },
     }));
 
