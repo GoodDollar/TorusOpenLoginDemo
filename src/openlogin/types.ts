@@ -1,6 +1,11 @@
 import { UserInfo } from "@web3auth/base";
 import { OPENLOGIN_NETWORK_TYPE } from "@toruslabs/openlogin";
 
+export enum SDKEvent {
+  LoginStatusChanged = "loginStatusChanged",
+  Error = "error"
+}
+
 export interface IOpenLoginOptions {
   clientId: string;
   googleClientId: string;
@@ -11,7 +16,6 @@ export interface IOpenLoginOptions {
   locale?: "en" | "de" | "ja" | "ko" | "zh" | "es";
   primaryColor?: string;
   darkMode?: boolean;
-  onLoginStateChanged?: (isLoggedIn: boolean) => void; // go with one callback by now, could be moved to EE in the future if many other events would appear
 }
 
 export interface IOpenLoginSDK {
@@ -27,6 +31,8 @@ export interface IOpenLoginSDK {
   sendTransaction(destination: string, amount: number): Promise<any>;
   signMessage(originalMessage: string): Promise<any>;
   getPrivateKey(): Promise<any>;
+  addEventListener(event: SDKEvent, listener: (...args: any[]) => void): void;
+  removeEventListener(event: SDKEvent, listener: (...args: any[]) => void): void;
 }
 
 export type IOpenLoginProviderProps = Omit<IOpenLoginOptions, 

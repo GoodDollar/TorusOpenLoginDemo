@@ -2,7 +2,7 @@ import { UserInfo } from "@web3auth/base";
 import { useColorMode, useColorModeValue } from "native-base";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import { IOpenLoginOptions, IOpenLoginSDK, IOpenLoginContext, IOpenLoginProviderProps, IOpenLoginHook, IEthersRPCHook } from "./types";
+import { IOpenLoginOptions, IOpenLoginSDK, IOpenLoginContext, IOpenLoginProviderProps, IOpenLoginHook, IEthersRPCHook, SDKEvent } from "./types";
 import SDK from "./sdk";
 
 export const OpenLoginContext = createContext<IOpenLoginContext>({
@@ -43,6 +43,7 @@ export const OpenLoginProvider = ({
   
   useEffect(() => {    
     const sdk = new SDK();
+    const { LoginStatusChanged } = SDKEvent;
 
     const onLoginStateChanged = async (isLoggedIn: boolean) => {
       let userInfo: Partial<UserInfo> | null = null;
@@ -55,13 +56,16 @@ export const OpenLoginProvider = ({
     }
 
     const initializeSDK = async () => {      
-      const options = { ...optionsRef.current, onLoginStateChanged }
-      
-      await sdk.initialize(options);
+      await sdk.initialize(optionsRef.current);
       setSDK(sdk);
     }
-    
+
+    sdk.addEventListener(LoginStatusChanged, onLoginStateChanged);    
     initializeSDK();
+
+    return () => {
+      sdk.removeEventListener(LoginStatusChanged, onLoginStateChanged);    
+    }
   }, [setUserInfo, setSDK]);
 
   if (!sdk) {

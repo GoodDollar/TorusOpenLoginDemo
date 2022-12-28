@@ -3,15 +3,16 @@ import { Web3AuthCore } from "@web3auth/core";
 import { OpenloginAdapter } from "@web3auth/openlogin-adapter";
 import { TorusWalletConnectorPlugin } from "@web3auth/torus-wallet-connector-plugin";
 import TorusEmbed from "@toruslabs/torus-embed";
+import EventEmitter from "eventemitter3";
 import { UserInfo, CHAIN_NAMESPACES, ADAPTER_STATUS, WALLET_ADAPTERS, SafeEventEmitterProvider, ADAPTER_EVENTS } from "@web3auth/base";
-import { IOpenLoginOptions, IOpenLoginSDK } from "./types";
+import { IOpenLoginOptions, IOpenLoginSDK, SDKEvent } from "./types";
 
 class OpenLoginWebSDK implements IOpenLoginSDK {
   private auth!: Web3AuthCore;  
   private eth!: ethers.providers.Web3Provider | null;
-  private listener!: IOpenLoginOptions["onLoginStateChanged"] | null;
   private adapter!: OpenloginAdapter;
   private plugin!: TorusWalletConnectorPlugin;
+  private emitter = new EventEmitter();
 
   get initialized(): boolean {
     return !!this.auth;
@@ -41,9 +42,7 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
     locale = "en",    
     // theme opts
     primaryColor,  
-    darkMode = false,  
-    // feedback opts
-    onLoginStateChanged 
+    darkMode = false
   }: IOpenLoginOptions): Promise<void> {
     if (this.initialized) {
       return;
@@ -110,10 +109,6 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
 
     const { CONNECTED, DISCONNECTED } = ADAPTER_EVENTS;
     const eventListener = this.onLoginStateChanged.bind(this);
-
-    if (onLoginStateChanged) {
-      this.listener = onLoginStateChanged;
-    }
     
     for (const event of [CONNECTED, DISCONNECTED]) {
       auth.on(event, eventListener);
@@ -214,8 +209,16 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
     })
   }
 
+  addEventListener(event: SDKEvent, listener: (...args: any[]) => void): void {
+    this.emitter.addListener(event, listener);
+  }
+
+  removeEventListener(event: SDKEvent, listener: (...args: any[]) => void): void {
+    this.emitter.removeListener(event, listener);
+  }
+
   private onLoginStateChanged() {
-    const { listener, isLoggedIn, provider, wallet } = this;
+    const { isLoggedIn, provider, wallet } = this;
     let eth: ethers.providers.Web3Provider | null = null;
       
     if (isLoggedIn && wallet?.torusWidgetVisibility) {
@@ -227,10 +230,7 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
     }
     
     this.eth = eth;
-    
-    if (listener) {
-      listener(isLoggedIn);
-    }
+    this.emitter.emit(SDKEvent.LoginStatusChanged, isLoggedIn);    
   }
 
   private assertInitialized() {
