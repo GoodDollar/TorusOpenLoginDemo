@@ -2,13 +2,16 @@ import { ethers } from "ethers";
 import { Web3AuthCore } from "@web3auth/core";
 import { OpenloginAdapter } from "@web3auth/openlogin-adapter";
 import { TorusWalletConnectorPlugin } from "@web3auth/torus-wallet-connector-plugin";
-import { UserInfo, CHAIN_NAMESPACES, ADAPTER_STATUS, WALLET_ADAPTERS, SafeEventEmitterProvider } from "@web3auth/base";
+import TorusEmbed from "@toruslabs/torus-embed";
+import { UserInfo, CHAIN_NAMESPACES, ADAPTER_STATUS, WALLET_ADAPTERS, SafeEventEmitterProvider, ADAPTER_EVENTS } from "@web3auth/base";
 import { IOpenLoginOptions, IOpenLoginSDK } from "./types";
 
 class OpenLoginWebSDK implements IOpenLoginSDK {
   private auth!: Web3AuthCore;  
   private eth!: ethers.providers.Web3Provider | null;
   private listener!: IOpenLoginOptions["onLoginStateChanged"] | null;
+  private adapter!: OpenloginAdapter;
+  private plugin!: TorusWalletConnectorPlugin;
 
   get initialized(): boolean {
     return !!this.auth;
@@ -20,6 +23,10 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
 
   private get provider(): SafeEventEmitterProvider | null {
     return this.auth.provider;
+  }
+
+  private get wallet(): TorusEmbed | null {
+    return this.plugin.torusWalletInstance;
   }
 
   async initialize({ 
@@ -60,8 +67,8 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
       logoDark: appLogo || "https://web3auth.io/images/w3a-L-Favicon-1.svg",
       logoLight: appLogo || "https://web3auth.io/images/w3a-D-Favicon-1.svg",
     }
-    
-    auth.configureAdapter(new OpenloginAdapter({
+
+    const adapter = new OpenloginAdapter({
       adapterSettings: {
         uxMode: "popup",
         loginConfig: {
@@ -79,26 +86,38 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
           ...logo,
         },        
       },
-    }));
+    });
 
-    await auth.addPlugin(new TorusWalletConnectorPlugin({
+    const plugin = new TorusWalletConnectorPlugin({
       torusWalletOpts: {},
       walletInitOptions: {
+        showTorusButton: false,
+        useWalletConnect: true,
         whiteLabel: {
           theme: { isDark: darkMode, colors },
           ...logo,
         },                
       },
-    }));
-
-    await auth.init();
-    this.auth = auth;
+    })
     
+    auth.configureAdapter(adapter);
+    await auth.addPlugin(plugin);
+    await auth.init();
+
+    this.auth = auth;
+    this.adapter = adapter;
+    this.plugin = plugin;
+
+    const { CONNECTED, DISCONNECTED } = ADAPTER_EVENTS;
+    const eventListener = this.onLoginStateChanged.bind(this);
+
     if (onLoginStateChanged) {
       this.listener = onLoginStateChanged;
     }
-
-    this.onLoginStateChanged();
+    
+    for (const event of [CONNECTED, DISCONNECTED]) {
+      auth.on(event, eventListener);
+    }       
   }
 
   async login(): Promise<void> {
@@ -111,8 +130,6 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
     await this.auth.connectTo(WALLET_ADAPTERS.OPENLOGIN, {
       loginProvider: "google",
     });
-    
-    this.onLoginStateChanged();
   }
 
   async getUserInfo(): Promise<Partial<UserInfo>> {    
@@ -128,8 +145,7 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
       return;
     }
 
-    await this.auth.logout();
-    this.onLoginStateChanged();
+    await this.auth.logout();    
   }
 
   async getChainId(): Promise<any> {
@@ -199,13 +215,17 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
   }
 
   private onLoginStateChanged() {
-    const { listener, isLoggedIn, provider } = this;
+    const { listener, isLoggedIn, provider, wallet } = this;
     let eth: ethers.providers.Web3Provider | null = null;
+      
+    if (isLoggedIn && wallet?.torusWidgetVisibility) {
+      wallet?.hideTorusButton();
+    }
     
-    if (isLoggedIn) {
+    if (provider) {
       eth = new ethers.providers.Web3Provider(provider!);    
     }
-
+    
     this.eth = eth;
     
     if (listener) {
