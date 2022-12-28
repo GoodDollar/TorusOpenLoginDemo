@@ -2,7 +2,7 @@ import { UserInfo } from "@web3auth/base";
 import { OPENLOGIN_NETWORK_TYPE } from "@toruslabs/openlogin";
 
 export enum SDKEvent {
-  LoginStatusChanged = "loginStatusChanged",
+  LoginStateChanged = "loginStatusChanged",
   Error = "error"
 }
 

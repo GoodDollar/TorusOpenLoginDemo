@@ -43,7 +43,7 @@ export const OpenLoginProvider = ({
   
   useEffect(() => {    
     const sdk = new SDK();
-    const { LoginStatusChanged } = SDKEvent;
+    const { LoginStateChanged } = SDKEvent;
 
     const onLoginStateChanged = async (isLoggedIn: boolean) => {
       let userInfo: Partial<UserInfo> | null = null;
@@ -60,11 +60,11 @@ export const OpenLoginProvider = ({
       setSDK(sdk);
     }
 
-    sdk.addEventListener(LoginStatusChanged, onLoginStateChanged);    
+    sdk.addEventListener(LoginStateChanged, onLoginStateChanged);    
     initializeSDK();
 
     return () => {
-      sdk.removeEventListener(LoginStatusChanged, onLoginStateChanged);    
+      sdk.removeEventListener(LoginStateChanged, onLoginStateChanged);    
     }
   }, [setUserInfo, setSDK]);
 

@@ -230,7 +230,7 @@ class OpenLoginWebSDK implements IOpenLoginSDK {
     }
     
     this.eth = eth;
-    this.emitter.emit(SDKEvent.LoginStatusChanged, isLoggedIn);    
+    this.emitter.emit(SDKEvent.LoginStateChanged, isLoggedIn);    
   }
 
   private assertInitialized() {
