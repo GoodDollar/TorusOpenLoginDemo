@@ -6,11 +6,7 @@ export enum SDKEvent {
   Error = "error"
 }
 
-export interface IOpenLoginOptions {
-  clientId: string;
-  googleClientId: string;
-  verifier: string;
-  network?: OPENLOGIN_NETWORK_TYPE;
+export interface IOpenLoginCustomization {
   appName?: string;
   appLogo?: string;
   locale?: "en" | "de" | "ja" | "ko" | "zh" | "es";
@@ -18,10 +14,18 @@ export interface IOpenLoginOptions {
   darkMode?: boolean;
 }
 
+export interface IOpenLoginOptions extends IOpenLoginCustomization {
+  clientId: string;
+  googleClientId: string;
+  verifier: string;
+  network?: OPENLOGIN_NETWORK_TYPE;  
+}
+
 export interface IOpenLoginSDK {
   readonly initialized: boolean;
   readonly isLoggedIn: boolean;
   initialize(options: IOpenLoginOptions): Promise<void>;
+  customize(customization: IOpenLoginCustomization): void;
   login(): Promise<void>;
   getUserInfo(): Promise<Partial<UserInfo>>;
   logout(): Promise<void>;
