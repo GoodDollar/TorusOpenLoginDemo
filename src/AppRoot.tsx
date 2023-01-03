@@ -5,7 +5,7 @@ import { OpenLoginProvider } from "./openlogin";
 
 const theme = extendTheme({
   config: {
-    initialColorMode: "dark",
+    initialColorMode: "light",
   },
 });
 
