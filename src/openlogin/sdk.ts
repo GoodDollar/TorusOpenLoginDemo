@@ -170,6 +170,7 @@ export class OpenLoginSDK implements IOpenLoginSDK {
     this.plugin = null; 
     
     await this.initialize(options);
+    this.emitter.emit(SDKEvent.ConfigChanged);
   }
 
   private onLoginStateChanged() {

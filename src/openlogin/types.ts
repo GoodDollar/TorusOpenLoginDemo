@@ -4,6 +4,7 @@ import { Web3AuthCore, Web3AuthCoreOptions } from "@web3auth/core";
 
 export enum SDKEvent {
   LoginStateChanged = "loginStatusChanged",
+  ConfigChanged = "configChanged",
   Error = "error"
 }
 

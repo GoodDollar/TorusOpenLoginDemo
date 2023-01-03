@@ -9,7 +9,7 @@ import {
 } from '@web3-onboard/common';
 import type EventEmitter from 'eventemitter3';
 import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from '@web3auth/base'
-import { IOpenLoginSDK } from '../../openlogin/types';
+import { IOpenLoginSDK, SDKEvent } from '../../openlogin/types';
 
 const { EIP155, OTHER } = CHAIN_NAMESPACES;
 
@@ -93,7 +93,7 @@ export function openlogin(sdk: IOpenLoginSDK): WalletInit {
       const emitter = new EventEmitter();
       const provider = makeProvider(sdk, emitter, chains);
 
-      emitter.on('chainChanged', () => {
+      sdk.addEventListener(SDKEvent.ConfigChanged, () => {
         const newChainProvider = makeProvider(sdk, emitter, chains);
 
         provider.request = newChainProvider.request.bind(newChainProvider)
