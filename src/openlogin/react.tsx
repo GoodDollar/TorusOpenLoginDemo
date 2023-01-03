@@ -2,8 +2,9 @@ import { UserInfo } from "@web3auth/base";
 import { useColorMode, useColorModeValue } from "native-base";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import { IOpenLoginOptions, IOpenLoginSDK, IOpenLoginContext, IOpenLoginProviderProps, IOpenLoginHook, IEthersRPCHook, SDKEvent, IOpenLoginCustomization } from "./types";
-import SDK from "./sdk";
+import { noop } from "lodash";
+import { OpenLoginSDK } from "./sdk";
+import { IOpenLoginContext, IOpenLoginCustomization, IOpenLoginHook, IOpenLoginOptions, IOpenLoginProviderProps, IOpenLoginSDK, SDKEvent } from "./types";
 
 export const OpenLoginContext = createContext<IOpenLoginContext>({
   userInfo: null,
@@ -46,7 +47,7 @@ export const OpenLoginProvider = ({
   })
   
   useEffect(() => {    
-    const sdk = new SDK();
+    const sdk = new OpenLoginSDK();
     const { LoginStateChanged } = SDKEvent;
 
     const onLoginStateChanged = async (isLoggedIn: boolean) => {
@@ -75,7 +76,7 @@ export const OpenLoginProvider = ({
   useEffect(() => {
     if (initiallyCustomizedRef.current) {
       // if flag enabled - update customization
-      sdk?.customize(customization);
+      sdk?.customize(customization).catch(noop);
     } else if (sdk) {
       // once SDK initialized - enable flag to start updaing from the next render
       initiallyCustomizedRef.current = true;
@@ -102,29 +103,4 @@ export const useOpenLogin = (): IOpenLoginHook => {
   const { isLoggedIn } = sdk!;
 
   return { isLoggedIn, userInfo, login, logout };
-}
-
-export const useEthersRPC = (): IEthersRPCHook => {
-  const { sdk } = useContext(OpenLoginContext);
-  const getChainId = useCallback(async () => sdk!.getChainId(), [sdk]);
-  const getAccounts = useCallback(async () => sdk!.getAccounts(), [sdk]);
-  const getBalance = useCallback(async () => sdk!.getBalance(), [sdk]);
-  const getPrivateKey = useCallback(async () => sdk!.getPrivateKey(), [sdk]);
-  
-  const signMessage = useCallback(async (originalMessage: string) => {
-    return sdk!.signMessage(originalMessage);
-  }, [sdk]);
-
-  const sendTransaction = useCallback(async (destination: string, amount: number) => {
-    return sdk!.sendTransaction(destination, amount);
-  }, [sdk]);
-
-  return {
-    getChainId,
-    getAccounts,
-    getBalance,
-    getPrivateKey,
-    signMessage,
-    sendTransaction,
-  };
 }

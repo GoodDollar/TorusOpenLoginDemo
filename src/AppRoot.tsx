@@ -2,6 +2,7 @@ import React from "react";
 import App from "./App";
 import { NativeBaseProvider, extendTheme } from "native-base";
 import { OpenLoginProvider } from "./openlogin";
+import { OnboardProvider } from "./onboard";
 
 const theme = extendTheme({
   config: {
@@ -24,7 +25,9 @@ const AppRoot = () => (
       appName="GoodSwap"
       appLogo="https://goodswap.xyz/static/media/logo.1fb143e9.png"
     >
-      <App />
+      <OnboardProvider>
+        <App />
+      </OnboardProvider>
     </OpenLoginProvider>
   </NativeBaseProvider>
 );

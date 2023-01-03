@@ -1,3 +1,4 @@
+import { useConnectWallet } from "@web3-onboard/react";
 import {
   Text,
   HStack,
@@ -8,11 +9,10 @@ import {
   Box,
   Button,
 } from "native-base";
-import { useOpenLogin } from "./openlogin";
 
 function App() {
   const { colorMode } = useColorMode();
-  const { userInfo, login, logout } = useOpenLogin();
+  const [{ wallet }, connect, disconnect] = useConnectWallet();
 
   return (
     <Box
@@ -23,9 +23,9 @@ function App() {
     >
       <VStack space={5} alignItems="center">
         <Heading size="lg">Welcome to NativeBase</Heading>
-        {userInfo && (
+        {wallet && (
           <Text>
-            Welcome, {userInfo.name}{' '}
+            {wallet.label}
             <Box
               _text={{
                 fontFamily: "monospace",
@@ -36,14 +36,14 @@ function App() {
               _dark={{ bg: "blueGray.800" }}
               _light={{ bg: "blueGray.200" }}
             >
-              {userInfo.email}
+              {wallet.accounts[0].address}
             </Box>
           </Text>
         )}
-        {userInfo ? (
-          <Button onPress={logout}>Sign out</Button>
+        {wallet ? (
+          <Button onPress={disconnect as any}>Sign out</Button>
           ) : (
-          <Button onPress={login}>Sign In</Button>
+          <Button onPress={connect as any}>Sign In</Button>
         )}
         <ToggleDarkMode />
       </VStack>

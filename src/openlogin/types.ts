@@ -1,5 +1,6 @@
-import { UserInfo } from "@web3auth/base";
+import { SafeEventEmitterProvider, UserInfo } from "@web3auth/base";
 import { OPENLOGIN_NETWORK_TYPE } from "@toruslabs/openlogin";
+import { Web3AuthCore, Web3AuthCoreOptions } from "@web3auth/core";
 
 export enum SDKEvent {
   LoginStateChanged = "loginStatusChanged",
@@ -19,22 +20,22 @@ export interface IOpenLoginOptions extends IOpenLoginCustomization {
   googleClientId: string;
   verifier: string;
   network?: OPENLOGIN_NETWORK_TYPE;  
+  chain?: Web3AuthCoreOptions["chainConfig"];
 }
+
+export type IOpenLoginBCOptions = Pick<IOpenLoginOptions, "network" | "chain">;
 
 export interface IOpenLoginSDK {
   readonly initialized: boolean;
   readonly isLoggedIn: boolean;
+  readonly auth: Web3AuthCore | null;
+  readonly provider: SafeEventEmitterProvider | null;
   initialize(options: IOpenLoginOptions): Promise<void>;
+  configure(blockchain: IOpenLoginBCOptions): Promise<void>;
   customize(customization: IOpenLoginCustomization): Promise<void>;
   login(): Promise<void>;
   getUserInfo(): Promise<Partial<UserInfo>>;
   logout(): Promise<void>;
-  getChainId(): Promise<any>;
-  getAccounts(): Promise<any>;
-  getBalance(): Promise<string>;
-  sendTransaction(destination: string, amount: number): Promise<any>;
-  signMessage(originalMessage: string): Promise<any>;
-  getPrivateKey(): Promise<any>;
   addEventListener(event: SDKEvent, listener: (...args: any[]) => void): void;
   removeEventListener(event: SDKEvent, listener: (...args: any[]) => void): void;
 }
@@ -59,12 +60,3 @@ export type IOpenLoginHook = Pick<IOpenLoginSDK,
 > & {
   userInfo: Partial<UserInfo> | null; 
 };
-
-export type IEthersRPCHook = Pick<IOpenLoginSDK, 
-  "getAccounts" | 
-  "getBalance" | 
-  "getChainId" | 
-  "getPrivateKey" | 
-  "sendTransaction" | 
-  "signMessage"
->;
