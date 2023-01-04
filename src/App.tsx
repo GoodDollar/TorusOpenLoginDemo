@@ -1,3 +1,4 @@
+import React, { useCallback } from 'react'
 import { useConnectWallet } from "@web3-onboard/react";
 import {
   Text,
@@ -13,6 +14,20 @@ import {
 function App() {
   const { colorMode } = useColorMode();
   const [{ wallet }, connect, disconnect] = useConnectWallet();
+
+  const prevCon = false
+
+  const connectFN = useCallback(() => {
+    // casting as any will make autoSelect a required property (why?)
+    // this is only used for an eager connecting an existing previous one
+    // ie:
+    if (prevCon) {
+      const prevExistingCon = {label: 'MetaMask', disableModals: true}
+      connect({autoSelect: prevExistingCon})
+    } else {
+      connect()
+    }
+  }, [connect, prevCon])
 
   return (
     <Box
@@ -43,7 +58,7 @@ function App() {
         {wallet ? (
           <Button onPress={disconnect as any}>Sign out</Button>
           ) : (
-          <Button onPress={connect as any}>Sign In</Button>
+          <Button onPress={connectFN}>Sign In</Button>
         )}
         <ToggleDarkMode />
       </VStack>
